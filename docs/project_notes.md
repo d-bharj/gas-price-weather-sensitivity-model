@@ -20,7 +20,7 @@ Residuals that are way off (2 standard deviations) are probably supply shocks no
 - Pure OLS regression for simplicity non-linear models could do better
 - Date range 2022-01-01 to 2025-12-31 covers the crisis and normalisation
 
-## Stuff That Went Wrong
+## Challenges Encountered
 
 - YFinance returns multi-level columns had to flatten to get Close prices
 - Open-Meteo returns dates as strings had to parse them
