@@ -120,7 +120,7 @@ def visualize_results(df):
     plt.tight_layout()
     plt.show()
 
-# ---- run the thing ----
+# Run
 
 print("fetching TTF data...")
 gas_df = fetch_gas_data(START_DATE, END_DATE)
