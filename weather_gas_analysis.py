@@ -143,4 +143,7 @@ merged_df, model = run_regression_analysis(merged_df)
 print("plotting...")
 visualize_results(merged_df)
 
+merged_df.to_csv("ttf_analysis_output.csv", date_format="%Y-%m-%d")
+print("exported to ttf_analysis_output.csv")
+
 print("done")

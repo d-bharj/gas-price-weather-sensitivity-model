@@ -37,3 +37,7 @@ Residuals that are way off (2 standard deviations) are probably supply shocks no
 - Multiple cities weighted by gas demand instead of just Amsterdam
 - Storage data and pipeline flows would explain a lot more of the residuals
 - Use the full forward curve instead of just front month
+
+## Tableau Export
+
+A CSV export line has been added to the script `merged_df.to_csv("ttf_analysis_output.csv")` which outputs all columns TTF_Price Avg_Temp_C HDD Predicted_Price and Residuals for direct use in Tableau dashboards
