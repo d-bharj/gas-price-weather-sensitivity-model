@@ -41,3 +41,9 @@ Residuals that are way off (2 standard deviations) are probably supply shocks no
 ## Tableau Export
 
 A CSV export line has been added to the script `merged_df.to_csv("ttf_analysis_output.csv")` which outputs all columns TTF_Price Avg_Temp_C HDD Predicted_Price and Residuals for direct use in Tableau dashboards
+
+## Addendum — Code Simplification
+
+The script has been restructured to reduce from six functions to two, with the remaining pipeline steps inlined in the main block.
+The removed functions (`calculate_hdd`, `merge_data`, `run_regression_analysis`, `visualize_results`) were thin wrappers around 1-3 lines of pandas or statsmodels calls.
+Inlining them eliminates unnecessary indirection while preserving the same inputs, outputs, and regression diagnostics.
