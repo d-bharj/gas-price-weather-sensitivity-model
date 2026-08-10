@@ -4,8 +4,7 @@ import yfinance as yf
 import requests
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
-import seaborn as sns
-import warnings
+
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -17,7 +16,7 @@ HDD_BASE = 18.0          # EU standard base temp for HDD
 START_DATE = "2022-01-01"
 END_DATE = "2025-12-31"
 
-sns.set_style("whitegrid")
+plt.style.use("seaborn-v0_8-whitegrid")
 plt.rcParams['figure.dpi'] = 120
 
 
@@ -47,8 +46,8 @@ def fetch_weather_data(start_date: str, end_date: str,
                        latitude: float, longitude: float) -> pd.DataFrame:
     """Fetch daily mean temperature from Open-Meteo Archive API.
 
-    Uses Amsterdam (52.36N, 4.90E) as a weather proxy for the TTF trading hub.
-    Open-Meteo requires no API key and provides ERA5-reanalysis data.
+    Uses Amsterdam as a weather proxy for the TTF trading hub.
+    Open-Meteo doesn't need an API key.
     """
     base_url = "https://archive-api.open-meteo.com/v1/archive"
     params = {
@@ -77,45 +76,32 @@ def fetch_weather_data(start_date: str, end_date: str,
 # yfinance, requests, statsmodels, and matplotlib.
 # ---------------------------------------------------------------------------
 
-print("fetching TTF data...")
 gas = fetch_gas_data(START_DATE, END_DATE)
-print(f"  got {len(gas)} days of gas prices")
-
-print("fetching weather data for Amsterdam...")
 weather = fetch_weather_data(START_DATE, END_DATE, AMS_LAT, AMS_LON)
-print(f"  got {len(weather)} days of temps")
 
-#Step 1: Get Heating Degree Days (HDD)
-# HDD = max(0, 18C - T_avg) the 18c base is EU standard: represents
-# the outdoor temperature below which buildings require heating.
+# --- Step 1: Heating Degree Days ---
+# HDD = max(0, 18C - T_avg). The 18C base is the EU standard, the
+# temperature below which buildings typically require heating.
 weather['HDD'] = (HDD_BASE - weather['Avg_Temp_C']).clip(lower=0)
 
-# Step 2: Merge gas and weather on date
-#  join retains only dates where both a settlement price and a
-# temperature record exist. mismatched calendars excluded
+# --- Step 2: Merge on date ---
+# Inner join retains only dates with both a settlement price and a
+# temperature record; mismatched calendars are excluded silently.
 gas['TTF_Price'] = gas['TTF_Price'].ffill()
 df = gas.join(weather, how='inner')
-print(f"  merged to {len(df)} rows")
 
-# Step 3: OLS regression — TTF_Price ~ HDD
-# Model: TTF_Price = beta_0 + beta_1 * HDD + epsilon
-# beta_1 estimates marginal price impact of one additional HDD (EUR/MWh).
-# the R-squared quantifies how much of price variance is explained by cold.
+# --- Step 3: OLS regression: TTF_Price ~ HDD ---
+# beta_1 estimates the marginal price impact of one additional HDD.
 X = sm.add_constant(df['HDD'])
 y = df['TTF_Price']
 model = sm.OLS(y, X).fit()
 print(model.summary())
-
 df['Predicted_Price'] = model.fittedvalues
 df['Residuals'] = model.resid
-print(f"R-squared: {model.rsquared:.3f}")
-print(f"HDD coefficient: {model.params['HDD']:.2f} EUR/MWh per HDD")
 
-#Step 4: Visualise — price series, residual outliers
-# residuals beyond 2 standard deviations correspond to supply-side
-# events (e.g outages) rather than weather.
+# --- Step 4: Plot — price series and residual outliers ---
+# Residuals beyond 2 sigma suggest supply-side events rather than weather.
 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 8))
-
 ax1.plot(df.index, df['TTF_Price'], color='orange', linewidth=1)
 ax1.set_ylabel('TTF Price (EUR/MWh)')
 ax1.set_title('TTF Gas Price — Daily Front Month')
@@ -133,7 +119,5 @@ ax2.set_title(f'Residuals — {len(outliers)} outliers beyond {thresh:.1f} EUR/M
 plt.tight_layout()
 plt.show()
 
-#Step 5: Export for tableau
+# --- Step 5: Export for downstream analysis ---
 df.to_csv("ttf_analysis_output.csv", date_format="%Y-%m-%d")
-print("exported to ttf_analysis_output.csv")
-print("done")

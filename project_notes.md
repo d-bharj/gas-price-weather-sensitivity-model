@@ -47,3 +47,7 @@ A CSV export line has been added to the script `merged_df.to_csv("ttf_analysis_o
 The script has been restructured to reduce from six functions to two, with the remaining pipeline steps inlined in the main block.
 The removed functions (`calculate_hdd`, `merge_data`, `run_regression_analysis`, `visualize_results`) were thin wrappers around 1-3 lines of pandas or statsmodels calls.
 Inlining them eliminates unnecessary indirection while preserving the same inputs, outputs, and regression diagnostics.
+
+## Addendum — Output Noise Reduction
+
+Progress messages ("fetching TTF data...", "exported to...") have been removed. The script now prints only the regression summary. CSV export is unchanged.
